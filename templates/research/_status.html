@@ -1,0 +1,24 @@
+<div id="task-status"
+     {% if not task.is_terminal %}
+     hx-get="{% url 'research-status' task.pk %}?last={{ task.status }}"
+     hx-trigger="every 2s"
+     hx-swap="outerHTML"
+     {% endif %}>
+  <div class="inline" style="display:flex; align-items:center; gap:12px; margin-bottom:8px;">
+    <span class="badge {{ task.status }}">{{ task.get_status_display }}</span>
+    {% if task.is_partial %}<span class="badge insufficient">部分完成</span>{% endif %}
+    <span class="small muted">阶段 {{ task.phase }}</span>
+    <span class="small muted">进度 {{ task.progress_pct }}%</span>
+    {% if task.completion_reason %}<span class="small muted">结束原因 {{ task.completion_reason }}</span>{% endif %}
+  </div>
+  <div class="progress"><span style="width: {{ task.progress_pct }}%;"></span></div>
+  <p class="small muted" style="margin-bottom:0;">
+    已用 {{ task.tokens_used }} / {{ task.budget_tokens }} token ·
+    第 {{ task.attempt|add:1 }} / {{ task.max_attempts }} 次尝试
+    {% if task.deadline_at %}· 截止 {{ task.deadline_at|date:"H:i:s" }}{% endif %}
+  </p>
+  {% if task.error %}<p class="small" style="color: var(--bad);">{{ task.error }}</p>{% endif %}
+  {% if not task.is_terminal %}
+    <p class="small muted">页面每 2 秒刷新一次，任务结束后自动加载完整结果。</p>
+  {% endif %}
+</div>

@@ -1,0 +1,7 @@
+{
+  "key": "pg-index-types",
+  "url": "https://eval.local/postgresql/index-types",
+  "title": "PostgreSQL 索引类型与适用场景",
+  "tags": ["postgresql", "数据库", "eval-corpus"],
+  "text": "PostgreSQL 的默认索引类型是 B-tree。B-tree 支持等值查询、范围查询和排序，适用于大多数 OLTP 场景，例如 WHERE id = 1、WHERE created_at > '2024-01-01'、ORDER BY created_at。\n\nHash 索引只支持等值比较，索引体积通常小于 B-tree，但在 PostgreSQL 10 之前不支持 WAL 复制。\n\nGIN 是倒排索引，适合数组、JSONB、tsvector 全文检索，以及 pg_trgm 模糊匹配。GIN 写入成本较高，适合读多写少的场景。\n\nGiST 支持几何类型、范围类型和最近邻查询，PostGIS 的空间索引建立在 GiST 上。\n\nBRIN 保存每个数据块的摘要，体积很小，适合按物理顺序写入的时间序列数据。查询选择性高时 BRIN 效果差，需要配合 ORDER BY 时间列使用。"
+}

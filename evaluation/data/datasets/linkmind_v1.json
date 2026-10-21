@@ -1,0 +1,236 @@
+{
+  "version": "linkmind_v1",
+  "description": "LinkMind 离线评测集：10 个问题，覆盖 PostgreSQL、Redis、Django、Agent、检索与缓存。",
+  "cases": [
+    {
+      "key": "pg-index-choice",
+      "question": "PostgreSQL 的 B-tree、GIN、BRIN 索引分别适合什么场景？",
+      "reference_answer": "B-tree 支持等值、范围和排序，是默认索引；GIN 适合数组、JSONB 和全文检索；BRIN 体积小，适合按物理顺序写入的时间序列数据。",
+      "reference_sources": ["https://eval.local/postgresql/index-types"],
+      "reference_evidence": [
+        {
+          "url": "https://eval.local/postgresql/index-types",
+          "quote": "B-tree 支持等值查询、范围查询和排序，适用于大多数 OLTP 场景",
+          "key_facts": ["B-tree", {"any": ["范围查询", "范围扫描"]}, {"any": ["默认索引", "默认的索引"]}]
+        },
+        {
+          "url": "https://eval.local/postgresql/index-types",
+          "quote": "GIN 是倒排索引，适合数组、JSONB、tsvector 全文检索",
+          "key_facts": ["GIN", "JSONB", "全文检索"]
+        },
+        {
+          "url": "https://eval.local/postgresql/index-types",
+          "quote": "BRIN 保存每个数据块的摘要，体积很小，适合按物理顺序写入的时间序列数据",
+          "key_facts": ["BRIN", {"any": ["数据块", "block"]}, {"any": ["时间序列", "时序"]}]
+        }
+      ]
+    },
+    {
+      "key": "pg-explain",
+      "question": "怎样判断一条 PostgreSQL 查询慢在哪个环节？",
+      "reference_answer": "使用 EXPLAIN ANALYZE 查看真实耗时与每个节点的行数；估算行数偏差大时更新统计信息；关注 shared read 与连接方式。",
+      "reference_sources": ["https://eval.local/postgresql/explain-analyze"],
+      "reference_evidence": [
+        {
+          "url": "https://eval.local/postgresql/explain-analyze",
+          "quote": "EXPLAIN 展示查询计划，EXPLAIN ANALYZE 会实际执行并返回真实耗时",
+          "key_facts": [{"any": ["EXPLAIN ANALYZE", "explain analyze"]}, {"any": ["真实耗时", "实际耗时"]}]
+        },
+        {
+          "url": "https://eval.local/postgresql/explain-analyze",
+          "quote": "如果估算行数与实际行数差距很大，统计信息可能过期，可以执行 ANALYZE 更新统计信息",
+          "key_facts": [{"any": ["统计信息", "statistics"]}, "ANALYZE"]
+        },
+        {
+          "url": "https://eval.local/postgresql/explain-analyze",
+          "quote": "shared read 高说明数据不在缓存中，可能需要检查索引是否被使用，或增加 shared_buffers",
+          "key_facts": ["shared read", {"any": ["缓存", "cache"]}]
+        }
+      ]
+    },
+    {
+      "key": "redis-persistence-choice",
+      "question": "Redis 的 RDB 和 AOF 持久化如何取舍？",
+      "reference_answer": "RDB 快照紧凑、恢复快但可能丢数据；AOF 每秒刷盘丢失窗口小但文件大；生产上常同时开启。纯缓存场景可以关闭持久化。",
+      "reference_sources": ["https://eval.local/redis/persistence"],
+      "reference_evidence": [
+        {
+          "url": "https://eval.local/redis/persistence",
+          "quote": "RDB 在指定时间间隔生成数据快照，文件紧凑，恢复速度快，但两次快照之间的数据可能丢失",
+          "key_facts": ["RDB", {"any": ["快照", "snapshot"]}, {"any": ["恢复速度快", "恢复快"]}]
+        },
+        {
+          "url": "https://eval.local/redis/persistence",
+          "quote": "AOF 追加写命令日志，可以配置 everysec 每秒刷盘，最多丢失约一秒数据",
+          "key_facts": ["AOF", {"any": ["每秒刷盘", "everysec"]}, {"any": ["一秒", "1 秒", "1秒"]}]
+        },
+        {
+          "url": "https://eval.local/redis/persistence",
+          "quote": "生产环境常见组合是同时开启 RDB 和 AOF",
+          "key_facts": [{"any": ["同时开启", "同时使用", "组合"]}]
+        }
+      ]
+    },
+    {
+      "key": "django-async-queue",
+      "question": "为什么 Django 项目要把长任务放到异步队列，任务如何设计才安全？",
+      "reference_answer": "长任务会占满请求 worker；任务队列把执行移出请求周期。任务只传主键、状态落库，配合条件更新和租约避免重复执行，并按错误类型决定是否重试。",
+      "reference_sources": ["https://eval.local/django/huey"],
+      "reference_evidence": [
+        {
+          "url": "https://eval.local/django/huey",
+          "quote": "放在请求周期内会占满 worker，导致超时和重试",
+          "key_facts": [{"any": ["占满 worker", "占用 worker"]}, {"any": ["超时", "timeout"]}]
+        },
+        {
+          "url": "https://eval.local/django/huey",
+          "quote": "任务参数应尽量小，通常只传主键，业务状态写入数据库",
+          "key_facts": [{"any": ["只传主键", "传递主键", "传主键"]}, {"any": ["业务状态", "状态写入数据库"]}]
+        },
+        {
+          "url": "https://eval.local/django/huey",
+          "quote": "网络超时、限流、服务端 5xx 可以退避重试；参数错误和鉴权失败应立即失败并暴露错误",
+          "key_facts": [{"any": ["退避重试", "指数退避"]}, {"any": ["鉴权失败", "认证失败", "参数错误"]}]
+        }
+      ]
+    },
+    {
+      "key": "agent-citation",
+      "question": "多步研究 Agent 如何保证结论可追溯到原始来源？",
+      "reference_answer": "给证据分配稳定 ID，模型输出 [e:id] 标记，后端校验归属；非法引用让模型重写或剔除；每轮从数据库重建状态并保留证据索引。",
+      "reference_sources": ["https://eval.local/llm/rag-agent"],
+      "reference_evidence": [
+        {
+          "url": "https://eval.local/llm/rag-agent",
+          "quote": "给证据分配稳定 ID，要求模型输出 [e:12] 形式的标记，后端解析并校验 ID 是否属于本次任务",
+          "key_facts": [{"any": ["稳定 ID", "证据 ID", "证据编号"]}, {"any": ["校验", "验证"]}]
+        },
+        {
+          "url": "https://eval.local/llm/rag-agent",
+          "quote": "引用不存在时可以让模型重写一次，仍失败则剔除标记并记录校验结果",
+          "key_facts": [{"any": ["重写", "重新生成"]}, {"any": ["剔除", "移除"]}]
+        },
+        {
+          "url": "https://eval.local/llm/rag-agent",
+          "quote": "每轮从数据库重建结构化状态，只保留关键证据与未解决问题",
+          "key_facts": [{"any": ["重建", "重新构建"]}, {"any": ["关键证据", "未解决问题"]}]
+        }
+      ]
+    },
+    {
+      "key": "bm25-baseline",
+      "question": "BM25 为什么适合作为检索基线，它有什么局限？",
+      "reference_answer": "BM25 综合词频、逆文档频率和长度归一化，成本低、可复现，适合固定语料上的基线；但它对同义词和语义改写不敏感。",
+      "reference_sources": ["https://eval.local/ir/bm25"],
+      "reference_evidence": [
+        {
+          "url": "https://eval.local/ir/bm25",
+          "quote": "综合词频饱和、逆文档频率和文档长度归一化",
+          "key_facts": [{"any": ["词频", "term frequency"]}, {"any": ["逆文档频率", "IDF", "idf"]}]
+        },
+        {
+          "url": "https://eval.local/ir/bm25",
+          "quote": "BM25 不依赖向量模型，计算成本低，适合作为检索系统的对照基线",
+          "key_facts": [{"any": ["成本低", "计算成本低"]}, {"any": ["基线", "baseline"]}]
+        },
+        {
+          "url": "https://eval.local/ir/bm25",
+          "quote": "BM25 对同义词和语义改写不敏感",
+          "key_facts": [{"any": ["同义词", "近义词"]}, {"any": ["语义改写", "改写", "语义"]}]
+        }
+      ]
+    },
+    {
+      "key": "postgres-mvcc",
+      "question": "PostgreSQL 的 MVCC 如何让读写互不阻塞？",
+      "reference_answer": "更新写入新版本并保留旧版本，普通 SELECT 读取事务快照，因此读不阻塞写、写不阻塞读；旧版本由 VACUUM 清理。",
+      "reference_sources": ["https://eval.local/postgresql/mvcc"],
+      "reference_evidence": [
+        {
+          "url": "https://eval.local/postgresql/mvcc",
+          "quote": "更新一行时不会覆盖旧版本，而是写入新版本，旧版本保留给仍在运行的事务读取",
+          "key_facts": [{"any": ["新版本", "新行版本"]}, {"any": ["旧版本", "老版本"]}]
+        },
+        {
+          "url": "https://eval.local/postgresql/mvcc",
+          "quote": "普通的 SELECT 不会阻塞 UPDATE，UPDATE 也不会阻塞 SELECT",
+          "key_facts": [{"any": ["不会阻塞", "不阻塞"]}, "SELECT"]
+        },
+        {
+          "url": "https://eval.local/postgresql/mvcc",
+          "quote": "旧版本由 VACUUM 清理",
+          "key_facts": ["VACUUM"]
+        }
+      ]
+    },
+    {
+      "key": "cache-patterns",
+      "question": "缓存穿透、缓存击穿和缓存雪崩分别是什么，如何处理？",
+      "reference_answer": "穿透是查询不存在的数据，用空值缓存或布隆过滤器；击穿是热点键过期，用互斥锁或逻辑过期；雪崩是大量键同时过期或缓存不可用，用随机过期、多级缓存和限流熔断。",
+      "reference_sources": ["https://eval.local/redis/cache-patterns"],
+      "reference_evidence": [
+        {
+          "url": "https://eval.local/redis/cache-patterns",
+          "quote": "缓存穿透指查询不存在的数据，请求每次都绕过缓存打到数据库",
+          "key_facts": [{"any": ["穿透", "不存在的数据"]}, {"any": ["布隆过滤器", "空值", "Bloom"]}]
+        },
+        {
+          "url": "https://eval.local/redis/cache-patterns",
+          "quote": "缓存击穿指某个热点键过期瞬间，大量并发请求同时回源",
+          "key_facts": [{"any": ["击穿", "热点键"]}, {"any": ["互斥锁", "逻辑过期"]}]
+        },
+        {
+          "url": "https://eval.local/redis/cache-patterns",
+          "quote": "缓存雪崩指大量键在同一时间过期，或缓存服务整体不可用",
+          "key_facts": [{"any": ["雪崩", "同一时间过期"]}, {"any": ["随机", "多级缓存", "熔断"]}]
+        }
+      ]
+    },
+    {
+      "key": "django-nplus1",
+      "question": "Django ORM 的 N+1 查询如何发现和解决？",
+      "reference_answer": "N+1 是列表查询后逐行查关联；多对多用 prefetch_related，外键用 select_related；用工具条或 assertNumQueries 发现。",
+      "reference_sources": ["https://eval.local/django/orm-n-plus-one"],
+      "reference_evidence": [
+        {
+          "url": "https://eval.local/django/orm-n-plus-one",
+          "quote": "解决多对多和反向关联使用 prefetch_related，它先查主表，再用 IN 查询批量取关联数据",
+          "key_facts": ["prefetch_related", {"any": ["多对多", "反向关联"]}]
+        },
+        {
+          "url": "https://eval.local/django/orm-n-plus-one",
+          "quote": "解决外键和一对一关联使用 select_related，它在 SQL 层做 JOIN",
+          "key_facts": ["select_related", {"any": ["JOIN", "join"]}]
+        },
+        {
+          "url": "https://eval.local/django/orm-n-plus-one",
+          "quote": "在测试中用 django_assert_num_queries 断言查询次数",
+          "key_facts": [{"any": ["django_assert_num_queries", "assertNumQueries"]}]
+        }
+      ]
+    },
+    {
+      "key": "tool-arg-errors",
+      "question": "函数调用 Agent 如何处理工具参数错误和工具执行失败？",
+      "reference_answer": "用 Pydantic 校验参数，失败时把结构化错误回传模型修正，连续失败终止任务；只读工具可按参数哈希缓存，写操作要幂等。",
+      "reference_sources": ["https://eval.local/llm/function-calling"],
+      "reference_evidence": [
+        {
+          "url": "https://eval.local/llm/function-calling",
+          "quote": "后端必须用 Pydantic 等工具做参数校验，不要直接执行",
+          "key_facts": ["Pydantic", {"any": ["参数校验", "校验参数"]}]
+        },
+        {
+          "url": "https://eval.local/llm/function-calling",
+          "quote": "把结构化错误和修正提示回传给模型，让它在下一轮修正",
+          "key_facts": [{"any": ["结构化错误", "错误信息"]}, {"any": ["回传", "返回给模型", "反馈"]}]
+        },
+        {
+          "url": "https://eval.local/llm/function-calling",
+          "quote": "确定性只读工具可以按参数哈希缓存结果，避免重复消耗",
+          "key_facts": [{"any": ["参数哈希", "缓存"]}, {"any": ["只读", "幂等"]}]
+        }
+      ]
+    }
+  ]
+}

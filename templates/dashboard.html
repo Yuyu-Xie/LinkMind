@@ -1,0 +1,56 @@
+{% extends "base.html" %}
+{% block title %}概览 · LinkMind{% endblock %}
+{% block content %}
+<h1>概览</h1>
+
+<div class="grid cols-4">
+  <div class="stat"><div class="value">{{ stats.total }}</div><div class="label">书签总数</div></div>
+  <div class="stat"><div class="value">{{ stats.unread }}</div><div class="label">未读</div></div>
+  <div class="stat"><div class="value">{{ stats.archived }}</div><div class="label">已归档</div></div>
+  <div class="stat"><div class="value">{{ task_total }}</div><div class="label">研究任务</div></div>
+</div>
+
+<div class="grid two" style="margin-top: 18px;">
+  <section class="card">
+    <h2 style="margin-top: 0;">最近书签</h2>
+    {% if recent %}
+      <table>
+        <thead><tr><th>标题</th><th>标签</th><th>添加时间</th></tr></thead>
+        <tbody>
+          {% for bookmark in recent %}
+            <tr>
+              <td><a href="{% url 'bookmark-detail' bookmark.pk %}">{{ bookmark.resolved_title }}</a>
+                <div class="small muted">{{ bookmark.url|truncatechars:70 }}</div>
+              </td>
+              <td class="small muted">{{ bookmark.tag_names|join:", " }}</td>
+              <td class="small muted">{{ bookmark.date_added|date:"m-d H:i" }}</td>
+            </tr>
+          {% endfor %}
+        </tbody>
+      </table>
+    {% else %}
+      <p class="empty">还没有书签。<a href="{% url 'bookmark-list' %}">添加第一个书签</a>。</p>
+    {% endif %}
+  </section>
+
+  <section class="card">
+    <h2 style="margin-top: 0;">最近研究</h2>
+    {% if recent_tasks %}
+      <ul class="timeline">
+        {% for task in recent_tasks %}
+          <li>
+            <a href="{% url 'research-detail' task.pk %}">{{ task.question|truncatechars:48 }}</a>
+            <div class="small muted">
+              <span class="badge {{ task.status }}">{{ task.get_status_display }}</span>
+              {{ task.progress_pct }}% · {{ task.created_at|date:"m-d H:i" }}
+            </div>
+          </li>
+        {% endfor %}
+      </ul>
+      <p><a class="button secondary" href="{% url 'research-list' %}">发起研究</a></p>
+    {% else %}
+      <p class="empty">还没有研究任务。<a href="{% url 'research-list' %}">提出一个问题</a>。</p>
+    {% endif %}
+  </section>
+</div>
+{% endblock %}

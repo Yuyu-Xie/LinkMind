@@ -1,0 +1,23 @@
+{% extends "base.html" %}
+{% block title %}登录 · LinkMind{% endblock %}
+{% block content %}
+<div class="card" style="max-width: 420px; margin: 64px auto;">
+  <h1>登录</h1>
+  {% if form.errors %}
+    <ul class="messages"><li class="message error">用户名或密码不正确</li></ul>
+  {% endif %}
+  <form method="post">
+    {% csrf_token %}
+    <p>
+      <label for="id_username">用户名</label>
+      <input type="text" name="username" id="id_username" autofocus required>
+    </p>
+    <p>
+      <label for="id_password">密码</label>
+      <input type="password" name="password" id="id_password" required>
+    </p>
+    <input type="hidden" name="next" value="{{ next }}">
+    <button type="submit">登录</button>
+  </form>
+</div>
+{% endblock %}

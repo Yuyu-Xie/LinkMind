@@ -1,0 +1,7 @@
+{
+  "key": "pg-explain",
+  "url": "https://eval.local/postgresql/explain-analyze",
+  "title": "读懂 PostgreSQL EXPLAIN ANALYZE",
+  "tags": ["postgresql", "性能", "eval-corpus"],
+  "text": "EXPLAIN 展示查询计划，EXPLAIN ANALYZE 会实际执行并返回真实耗时。Seq Scan 表示顺序扫描整张表，Index Scan 通过索引定位行，Bitmap Heap Scan 先收集匹配的页面位图再回表。\n\ncost 是规划器的估算代价，第一项是启动代价，第二项是总代价。rows 是估算返回行数。如果估算行数与实际行数差距很大，统计信息可能过期，可以执行 ANALYZE 更新统计信息。\n\nBuffers 显示共享缓冲区命中情况。shared read 高说明数据不在缓存中，可能需要检查索引是否被使用，或增加 shared_buffers。\n\n定位慢查询时先看耗时最长的节点。Nested Loop 在驱动表行数很大时可能变慢，可以检查连接列是否有索引。"
+}

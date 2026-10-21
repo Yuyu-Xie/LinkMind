@@ -1,0 +1,48 @@
+{% extends "base.html" %}
+{% block title %}评测 #{{ run.pk }} · LinkMind{% endblock %}
+{% block content %}
+<p class="small muted"><a href="{% url 'evaluation-list' %}">← 返回评测</a></p>
+<h1>评测 #{{ run.pk }} · {{ run.get_strategy_display }}</h1>
+
+<section class="card">
+  <p class="small muted">
+    数据集 {{ run.dataset }}（{{ run.dataset_hash|truncatechars:16 }}） ·
+    模型 {{ run.model|default:"—" }} · 第 {{ run.run_index }} 次运行
+  </p>
+  <div class="grid cols-4">
+    <div class="stat"><div class="value">{{ run.summary.completion_rate|default:"—" }}</div><div class="label">技术完成率</div></div>
+    <div class="stat"><div class="value">{{ run.summary.strict_completion_rate|default:"—" }}</div><div class="label">严格完成率</div></div>
+    <div class="stat"><div class="value">{{ run.summary.citation_f1|default:"—" }}</div><div class="label">引用 F1</div></div>
+    <div class="stat"><div class="value">{{ run.summary.avg_tokens|default:"—" }}</div><div class="label">平均 Token</div></div>
+  </div>
+  <pre class="json" style="margin-top: 16px;">{{ run.summary }}</pre>
+</section>
+
+<section class="card">
+  <h2 style="margin-top:0;">用例结果</h2>
+  {% if cases %}
+    <table>
+      <thead>
+        <tr><th>用例</th><th>完成</th><th>严格</th><th>引用 P</th><th>引用 R</th><th>F1</th><th>关键事实</th><th>Token</th><th>耗时</th></tr>
+      </thead>
+      <tbody>
+        {% for case in cases %}
+          <tr>
+            <td><a href="{% url 'research-detail' case.task_id %}">{{ case.case_key }}</a></td>
+            <td>{{ case.completed|yesno:"是,否" }}</td>
+            <td>{{ case.strict_completed|yesno:"是,否" }}</td>
+            <td>{{ case.citation_precision|floatformat:2 }}</td>
+            <td>{{ case.citation_recall|floatformat:2 }}</td>
+            <td>{{ case.citation_f1|floatformat:2 }}</td>
+            <td>{{ case.key_fact_coverage|floatformat:2 }}</td>
+            <td>{{ case.tokens }}</td>
+            <td>{{ case.latency_ms }} ms</td>
+          </tr>
+        {% endfor %}
+      </tbody>
+    </table>
+  {% else %}
+    <p class="empty">没有用例结果。</p>
+  {% endif %}
+</section>
+{% endblock %}

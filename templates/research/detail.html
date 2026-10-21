@@ -1,0 +1,188 @@
+{% extends "base.html" %}
+{% block title %}研究 #{{ task.pk }} · LinkMind{% endblock %}
+{% block content %}
+<p class="small muted"><a href="{% url 'research-list' %}">← 返回研究列表</a></p>
+<h1>{{ task.question }}</h1>
+
+<section class="card">
+  {% include "research/_status.html" %}
+  <div style="display:flex; gap:8px; margin-top: 12px;">
+    {% if not task.is_terminal %}
+      <form method="post" action="{% url 'research-cancel' task.pk %}">
+        {% csrf_token %}
+        <button class="danger" type="submit">取消任务</button>
+      </form>
+    {% elif task.status == "failed" %}
+      <form method="post" action="{% url 'research-retry' task.pk %}">
+        {% csrf_token %}
+        <button type="submit">重试</button>
+      </form>
+    {% endif %}
+    <a class="button secondary" href="{% url 'research-list' %}">新建研究</a>
+  </div>
+</section>
+
+{% if report %}
+<section class="card">
+  <h2 style="margin-top:0;">研究报告</h2>
+  <p class="small muted">
+    版本 {{ report.version }} · 模型 {{ report.model|default:"模板" }} ·
+    引用 {{ report.validation.citation_count|default:0 }} 条 ·
+    生成于 {{ report.generated_at|date:"Y-m-d H:i:s" }}
+  </p>
+  <div class="report">{{ report_html|safe }}</div>
+</section>
+{% endif %}
+
+<div class="grid two">
+  <section class="card">
+    <h2 style="margin-top:0;">子问题</h2>
+    {% if sub_questions %}
+      <table>
+        <thead><tr><th>#</th><th>子问题</th><th>状态</th><th>答案</th></tr></thead>
+        <tbody>
+          {% for item in sub_questions %}
+            <tr>
+              <td class="muted">{{ item.order }}</td>
+              <td>{{ item.question }}</td>
+              <td><span class="badge {{ item.status }}">{{ item.get_status_display }}</span></td>
+              <td class="small">{{ item.answer|default:"—" }}</td>
+            </tr>
+          {% endfor %}
+        </tbody>
+      </table>
+    {% else %}
+      <p class="empty">尚未生成计划。</p>
+    {% endif %}
+  </section>
+
+  <section class="card">
+    <h2 style="margin-top:0;">统计</h2>
+    <table>
+      <tbody>
+        <tr><th>Token</th><td>{{ task.tokens_used }}（明细合计 {{ total_tokens }}）</td></tr>
+        <tr><th>来源</th><td>{{ sources|length }}</td></tr>
+        <tr><th>证据</th><td>{{ evidence|length }}</td></tr>
+        <tr><th>主张</th><td>{{ claim_rows|length }}</td></tr>
+        <tr><th>步骤</th><td>{{ task.steps.count }}</td></tr>
+        <tr><th>耗时</th><td>{% if task.duration_ms %}{{ task.duration_ms }} ms{% else %}—{% endif %}</td></tr>
+        <tr><th>创建</th><td>{{ task.created_at|date:"Y-m-d H:i:s" }}</td></tr>
+      </tbody>
+    </table>
+    {% if usage %}
+      <h3>LLM 调用</h3>
+      <table>
+        <thead><tr><th>用途</th><th>输入</th><th>输出</th><th>耗时</th></tr></thead>
+        <tbody>
+          {% for item in usage %}
+            <tr>
+              <td>{{ item.get_purpose_display }}</td>
+              <td>{{ item.prompt_tokens }}</td>
+              <td>{{ item.completion_tokens }}</td>
+              <td>{{ item.latency_ms }} ms</td>
+            </tr>
+          {% endfor %}
+        </tbody>
+      </table>
+    {% endif %}
+  </section>
+</div>
+
+<section class="card">
+  <h2 style="margin-top:0;">主张与证据</h2>
+  {% if claim_rows %}
+    <table>
+      <thead><tr><th>主张</th><th>状态</th><th>置信度</th><th>支持证据</th></tr></thead>
+      <tbody>
+        {% for row in claim_rows %}
+          <tr>
+            <td>{{ row.claim.text }}</td>
+            <td><span class="badge {{ row.claim.status }}">{{ row.claim.get_status_display }}</span></td>
+            <td class="small">{{ row.claim.confidence|floatformat:2 }}</td>
+            <td class="small">
+              {% for item in row.evidence %}
+                <a href="#evidence-{{ item.id }}">[e:{{ item.id }}]</a>
+                {{ item.quote|truncatechars:80 }}
+                <span class="muted">— {{ item.source.title|default:item.source.url|truncatechars:40 }}</span>
+                {% if not forloop.last %}<br>{% endif %}
+              {% empty %}
+                <span class="muted">无</span>
+              {% endfor %}
+            </td>
+          </tr>
+        {% endfor %}
+      </tbody>
+    </table>
+  {% else %}
+    <p class="empty">还没有主张。</p>
+  {% endif %}
+</section>
+
+<section class="card">
+  <h2 style="margin-top:0;">证据</h2>
+  {% for item in evidence %}
+    <div class="evidence-item" id="evidence-{{ item.id }}">
+      <div class="small muted">
+        [e:{{ item.id }}] · {{ item.source.get_source_type_display }} ·
+        <a href="{{ item.source.url }}" target="_blank" rel="noopener noreferrer">{{ item.source.title|default:item.source.url }}</a>
+        {% if item.sub_question_id %}· 子问题 #{{ item.sub_question_id }}{% endif %}
+        {% if item.char_start is not None %}· 字符 {{ item.char_start }}–{{ item.char_end }}{% endif %}
+      </div>
+      <div class="quote">{{ item.quote }}</div>
+    </div>
+  {% empty %}
+    <p class="empty">还没有证据。</p>
+  {% endfor %}
+</section>
+
+<div class="grid two">
+  <section class="card">
+    <h2 style="margin-top:0;">执行时间线</h2>
+    <ul class="timeline">
+      {% for step in steps %}
+        <li>
+          <span class="kind">#{{ step.step_no }} {{ step.get_step_type_display }}</span>
+          {% if step.tool_name %}<span class="mono">{{ step.tool_name }}</span>{% endif %}
+          <span class="badge {{ step.status }}">{{ step.status }}</span>
+          {% if step.error %}<div class="small" style="color: var(--bad);">{{ step.error }}</div>{% endif %}
+          {% if step.output.content %}
+            <div class="small">{{ step.output.content|truncatechars:200 }}</div>
+          {% elif step.output %}
+            <div class="small muted mono">{{ step.output|stringformat:"s"|truncatechars:220 }}</div>
+          {% endif %}
+          {% if step.latency_ms %}<span class="small muted">{{ step.latency_ms }} ms</span>{% endif %}
+        </li>
+      {% empty %}
+        <li class="empty">还没有步骤。</li>
+      {% endfor %}
+    </ul>
+  </section>
+
+  <section class="card">
+    <h2 style="margin-top:0;">事件</h2>
+    <ul class="timeline">
+      {% for event in events %}
+        <li>
+          <span class="kind">{{ event.kind }}</span>
+          <span class="small">{{ event.message }}</span>
+          <div class="small muted">{{ event.created_at|date:"H:i:s" }}</div>
+        </li>
+      {% empty %}
+        <li class="empty">还没有事件。</li>
+      {% endfor %}
+    </ul>
+
+    <h3>来源</h3>
+    <ul class="small">
+      {% for source in sources %}
+        <li>
+          <a href="{{ source.url }}" target="_blank" rel="noopener noreferrer">{{ source.title|default:source.url|truncatechars:50 }}</a>
+          <span class="badge {{ source.fetch_status }}">{{ source.fetch_status }}</span>
+        </li>
+      {% empty %}
+        <li class="empty">没有来源。</li>
+      {% endfor %}
+    </ul>
+  </section>
+</div>
+{% endblock %}

@@ -1,0 +1,76 @@
+{% extends "base.html" %}
+{% block title %}研究 · LinkMind{% endblock %}
+{% block content %}
+<h1>研究任务</h1>
+
+<section class="card">
+  <form method="post" action="{% url 'research-create' %}">
+    {% csrf_token %}
+    <div style="margin-bottom: 12px;">
+      <label for="id_question">研究问题</label>
+      <textarea name="question" id="id_question" rows="3" required
+                placeholder="例如：PostgreSQL 的索引类型分别适合什么场景？"></textarea>
+    </div>
+    <div class="inline">
+      <div style="flex: 1 1 180px;">
+        <label for="id_strategy">策略</label>
+        <select name="strategy" id="id_strategy">
+          <option value="agent">动态研究</option>
+          <option value="baseline">基线检索</option>
+        </select>
+      </div>
+      <div style="flex: 0 1 140px;">
+        <label for="id_max_steps">最大步数</label>
+        <input type="number" name="max_steps" id="id_max_steps" value="12" min="3" max="30">
+      </div>
+      <label style="display:flex; gap:6px; align-items:center; margin-bottom:8px;">
+        <input type="checkbox" name="offline" value="1" style="width:auto;">
+        仅用本地书签
+      </label>
+      <button type="submit">发起研究</button>
+    </div>
+  </form>
+</section>
+
+<section class="card">
+  <form class="inline" method="get" style="margin-bottom: 12px;">
+    <div style="flex: 0 1 200px;">
+      <label for="status">状态</label>
+      <select name="status" id="status" onchange="this.form.submit()">
+        <option value="">全部</option>
+        {% for value, label in status_choices %}
+          <option value="{{ value }}" {% if status_filter == value %}selected{% endif %}>{{ label }}</option>
+        {% endfor %}
+      </select>
+    </div>
+  </form>
+
+  {% if tasks %}
+    <table>
+      <thead>
+        <tr><th>问题</th><th>策略</th><th>状态</th><th>进度</th><th>Token</th><th>创建时间</th></tr>
+      </thead>
+      <tbody>
+        {% for task in tasks %}
+          <tr>
+            <td><a href="{% url 'research-detail' task.pk %}">{{ task.question|truncatechars:60 }}</a></td>
+            <td class="small">{{ task.get_strategy_display }}</td>
+            <td>
+              <span class="badge {{ task.status }}">{{ task.get_status_display }}</span>
+              {% if task.is_partial %}<span class="badge insufficient">部分</span>{% endif %}
+            </td>
+            <td class="small" style="min-width:120px;">
+              <div class="progress"><span style="width: {{ task.progress_pct }}%;"></span></div>
+              <span class="muted">{{ task.progress_pct }}%</span>
+            </td>
+            <td class="small muted">{{ task.tokens_used }}</td>
+            <td class="small muted">{{ task.created_at|date:"m-d H:i" }}</td>
+          </tr>
+        {% endfor %}
+      </tbody>
+    </table>
+  {% else %}
+    <p class="empty">还没有研究任务。</p>
+  {% endif %}
+</section>
+{% endblock %}

@@ -1,0 +1,7 @@
+{
+  "key": "django-async-tasks",
+  "url": "https://eval.local/django/huey",
+  "title": "Django 异步任务与 Huey",
+  "tags": ["django", "python", "架构", "eval-corpus"],
+  "text": "Web 请求应该在数百毫秒内返回。抓取网页、调用大模型、生成报告这类操作耗时从数秒到数分钟，放在请求周期内会占满 worker，导致超时和重试。\n\nHuey 是轻量任务队列，任务序列化后写入 Redis，由独立消费者进程执行。Django 项目中通过 HUEY 配置连接 RedisHuey，使用 @task 装饰器登记任务，用 manage.py run_huey 启动消费者。\n\n任务参数应尽量小，通常只传主键，业务状态写入数据库。这样任务重放时可以从数据库恢复状态，而不是依赖队列中的序列化数据。任务入口用条件更新抢占状态，配合数据库租约，可以避免重复执行。\n\n失败重试要区分可重试错误和不可重试错误。网络超时、限流、服务端 5xx 可以退避重试；参数错误和鉴权失败应立即失败并暴露错误。"
+}

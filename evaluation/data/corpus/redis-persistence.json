@@ -1,0 +1,7 @@
+{
+  "key": "redis-persistence",
+  "url": "https://eval.local/redis/persistence",
+  "title": "Redis 持久化：RDB 与 AOF",
+  "tags": ["redis", "架构", "eval-corpus"],
+  "text": "Redis 提供 RDB 和 AOF 两种持久化方式。RDB 在指定时间间隔生成数据快照，文件紧凑，恢复速度快，但两次快照之间的数据可能丢失。\n\nAOF 追加写命令日志，可以配置 everysec 每秒刷盘，最多丢失约一秒数据。AOF 文件通常大于 RDB，恢复时需要重放命令。Redis 7 使用 multi-part AOF，把基础快照与增量日志分开管理。\n\n生产环境常见组合是同时开启 RDB 和 AOF。RDB 用于备份与快速恢复，AOF 用于降低数据丢失窗口。只使用 RDB 时，主从切换可能丢失较多数据。\n\n对于纯缓存场景，如果数据可以从数据库重建，可以关闭持久化以降低写放大，但需要接受重启后缓存为空的代价。"
+}

@@ -1,0 +1,42 @@
+{% load static %}<!doctype html>
+<html lang="zh-CN">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>{% block title %}LinkMind{% endblock %}</title>
+  <link rel="stylesheet" href="{% static 'css/app.css' %}">
+  <script src="{% static 'vendor/htmx.min.js' %}" defer></script>
+</head>
+<body>
+  <header class="topbar">
+    <a class="brand" href="{% url 'dashboard' %}">LinkMind</a>
+    <nav>
+      <a href="{% url 'dashboard' %}">概览</a>
+      <a href="{% url 'bookmark-list' %}">书签</a>
+      <a href="{% url 'research-list' %}">研究</a>
+      <a href="{% url 'research-claims' %}">主张</a>
+      <a href="{% url 'evaluation-list' %}">评测</a>
+    </nav>
+    <div class="account">
+      {% if user.is_authenticated %}
+        <span>{{ user.username }}</span>
+        <form method="post" action="{% url 'logout' %}">
+          {% csrf_token %}
+          <button class="link" type="submit">退出</button>
+        </form>
+      {% endif %}
+    </div>
+  </header>
+
+  <main>
+    {% if messages %}
+      <ul class="messages">
+        {% for message in messages %}
+          <li class="message {{ message.tags }}">{{ message }}</li>
+        {% endfor %}
+      </ul>
+    {% endif %}
+    {% block content %}{% endblock %}
+  </main>
+</body>
+</html>

@@ -1,0 +1,35 @@
+{% load static %}<section class="card" id="bookmark-list">
+  {% if bookmarks %}
+    <table>
+      <thead>
+        <tr><th>标题</th><th>标签</th><th>状态</th><th>添加时间</th><th></th></tr>
+      </thead>
+      <tbody>
+        {% for bookmark in bookmarks %}
+          <tr>
+            <td>
+              <a href="{% url 'bookmark-detail' bookmark.pk %}">{{ bookmark.resolved_title }}</a>
+              <div class="small muted">{{ bookmark.url|truncatechars:80 }}</div>
+            </td>
+            <td class="small muted">{{ bookmark.tag_names|join:", " }}</td>
+            <td class="small">
+              {% if bookmark.is_archived %}<span class="badge canceled">已归档</span>{% endif %}
+              {% if bookmark.unread %}<span class="badge pending">未读</span>{% endif %}
+              {% if bookmark.content.status == "ready" %}<span class="badge completed">正文就绪</span>
+              {% elif bookmark.content.status == "failed" %}<span class="badge failed">抓取失败</span>{% endif %}
+            </td>
+            <td class="small muted">{{ bookmark.date_added|date:"Y-m-d H:i" }}</td>
+            <td class="small">
+              <form method="post" action="{% url 'bookmark-archive' bookmark.pk %}" style="display:inline">
+                {% csrf_token %}
+                <button class="link" type="submit">{% if bookmark.is_archived %}取消归档{% else %}归档{% endif %}</button>
+              </form>
+            </td>
+          </tr>
+        {% endfor %}
+      </tbody>
+    </table>
+  {% else %}
+    <p class="empty">没有匹配的书签。</p>
+  {% endif %}
+</section>

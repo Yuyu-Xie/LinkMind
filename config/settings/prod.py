@@ -1,0 +1,8 @@
+from .base import *  # noqa: F401,F403
+
+DEBUG = False
+
+SECURE_CONTENT_TYPE_NOSNIFF = True
+SECURE_REFERRER_POLICY = "same-origin"
+SESSION_COOKIE_HTTPONLY = True
+CSRF_COOKIE_HTTPONLY = False

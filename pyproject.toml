@@ -1,0 +1,47 @@
+[build-system]
+requires = ["setuptools>=69"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "linkmind"
+version = "0.1.0"
+description = "Personal knowledge research agent platform built on Django"
+requires-python = ">=3.13"
+dependencies = [
+    "Django>=6.1,<6.2",
+    "djangorestframework>=3.18,<3.19",
+    "huey[redis]>=3.4,<3.5",
+    "psycopg[binary]>=3.3,<3.4",
+    "openai>=3.35,<4",
+    "httpx>=0.28,<0.29",
+    "trafilatura>=2.3,<3",
+    "beautifulsoup4>=4.15,<5",
+    "lxml>=6.1,<7",
+    "python-dotenv>=1.1,<2",
+    "markdown>=3.10,<4",
+    "bleach>=6.4,<7",
+]
+
+[project.optional-dependencies]
+dev = [
+    "pytest>=9.0",
+    "pytest-django>=4.14",
+    "pytest-cov>=7.0",
+    "ruff>=0.14",
+]
+
+[tool.setuptools.packages.find]
+include = ["config*", "bookmarks*", "research*", "evaluation*"]
+
+[tool.pytest.ini_options]
+DJANGO_SETTINGS_MODULE = "config.settings.dev"
+python_files = ["test_*.py", "*_tests.py"]
+addopts = "-q"
+
+[tool.ruff]
+line-length = 100
+target-version = "py313"
+
+[tool.ruff.lint]
+select = ["E", "F", "I", "UP", "B", "SIM"]
+ignore = ["E501"]

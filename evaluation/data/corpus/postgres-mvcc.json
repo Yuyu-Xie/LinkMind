@@ -1,0 +1,7 @@
+{
+  "key": "postgres-mvcc",
+  "url": "https://eval.local/postgresql/mvcc",
+  "title": "PostgreSQL MVCC 与事务隔离",
+  "tags": ["postgresql", "数据库", "eval-corpus"],
+  "text": "PostgreSQL 使用多版本并发控制实现事务隔离。更新一行时不会覆盖旧版本，而是写入新版本，旧版本保留给仍在运行的事务读取。因此普通的 SELECT 不会阻塞 UPDATE，UPDATE 也不会阻塞 SELECT。\n\n每个事务在开始时取得快照，只能看到快照之前提交的数据。这实现了读已提交和可重复读隔离级别。可重复读下，同一事务内多次查询结果一致。\n\n两个事务修改同一行时，后到的事务会等待行锁，默认情况下等待超时或检测到死锁时中止。应用应保持加锁顺序一致，缩短事务时间。\n\n旧版本由 VACUUM 清理。长时间运行的事务会阻止清理，导致表膨胀。监控 pg_stat_activity 中的长事务是日常运维的一部分。"
+}

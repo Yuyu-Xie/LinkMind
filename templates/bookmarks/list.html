@@ -1,0 +1,47 @@
+{% extends "base.html" %}
+{% block title %}书签 · LinkMind{% endblock %}
+{% block content %}
+<h1>书签</h1>
+
+<section class="card">
+  <form class="inline" method="post" action="{% url 'bookmark-create' %}"
+        hx-post="{% url 'bookmark-create' %}" hx-target="#bookmark-list" hx-swap="outerHTML">
+    {% csrf_token %}
+    <div style="flex: 2 1 320px;">
+      <label for="id_url">URL</label>
+      <input type="url" name="url" id="id_url" required placeholder="https://">
+    </div>
+    <div style="flex: 2 1 240px;">
+      <label for="id_title">标题</label>
+      <input type="text" name="title" id="id_title">
+    </div>
+    <div style="flex: 1 1 160px;">
+      <label for="id_tag_names">标签</label>
+      <input type="text" name="tag_names" id="id_tag_names" placeholder="redis, 架构">
+    </div>
+    <button type="submit">保存书签</button>
+  </form>
+</section>
+
+<section class="card">
+  <form class="inline" method="get"
+        hx-get="{% url 'bookmark-list' %}" hx-target="#bookmark-list" hx-swap="outerHTML"
+        hx-trigger="submit, keyup changed delay:400ms from:input[name=q]">
+    <div style="flex: 1 1 320px;">
+      <label for="q">搜索</label>
+      <input type="text" name="q" id="q" value="{{ q }}" placeholder="标题、描述、笔记、URL 关键词">
+    </div>
+    <div style="flex: 1 1 220px;">
+      <label for="tags">标签</label>
+      <input type="text" name="tags" id="tags" value="{{ selected_tags|join:',' }}" placeholder="逗号分隔">
+    </div>
+    <label style="display:flex; gap:6px; align-items:center; margin-bottom:8px;">
+      <input type="checkbox" name="archived" value="1" {% if archived %}checked{% endif %} style="width:auto;">
+      只看归档
+    </label>
+    <button class="secondary" type="submit">筛选</button>
+  </form>
+</section>
+
+{% include "bookmarks/_bookmark_list.html" %}
+{% endblock %}

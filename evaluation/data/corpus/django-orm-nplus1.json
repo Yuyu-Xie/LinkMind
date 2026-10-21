@@ -1,0 +1,7 @@
+{
+  "key": "django-orm-nplus1",
+  "url": "https://eval.local/django/orm-n-plus-one",
+  "title": "Django ORM 的 N+1 查询与优化",
+  "tags": ["django", "性能", "eval-corpus"],
+  "text": "N+1 查询指先执行一次列表查询，再对每一行执行一次关联查询。例如遍历书签并访问 bookmark.tags.all()，如果没有预取，就会产生 N 次额外查询。\n\n解决多对多和反向关联使用 prefetch_related，它先查主表，再用 IN 查询批量取关联数据。解决外键和一对一关联使用 select_related，它在 SQL 层做 JOIN。\n\n定位 N+1 可以查看 Django Debug Toolbar 的 SQL 面板，或在测试中用 django_assert_num_queries 断言查询次数。\n\n排序和过滤字段应建立索引。只读取需要的列可以用 only 或 values，减少数据传输。批量写入用 bulk_create，减少往返次数。"
+}

@@ -1,0 +1,28 @@
+{% extends "base.html" %}
+{% block title %}主张 · LinkMind{% endblock %}
+{% block content %}
+<h1>研究主张</h1>
+<section class="card">
+  {% if claims %}
+    <table>
+      <thead><tr><th>主张</th><th>任务</th><th>状态</th><th>证据</th></tr></thead>
+      <tbody>
+        {% for claim in claims %}
+          <tr>
+            <td>{{ claim.text }}</td>
+            <td class="small"><a href="{% url 'research-detail' claim.task_id %}">{{ claim.task.question|truncatechars:36 }}</a></td>
+            <td><span class="badge {{ claim.status }}">{{ claim.get_status_display }}</span></td>
+            <td class="small">
+              {% for link in claim.links.all %}
+                <a href="{% url 'research-detail' claim.task_id %}#evidence-{{ link.evidence_id }}">[e:{{ link.evidence_id }}]</a>
+              {% empty %}<span class="muted">无</span>{% endfor %}
+            </td>
+          </tr>
+        {% endfor %}
+      </tbody>
+    </table>
+  {% else %}
+    <p class="empty">还没有主张。</p>
+  {% endif %}
+</section>
+{% endblock %}
